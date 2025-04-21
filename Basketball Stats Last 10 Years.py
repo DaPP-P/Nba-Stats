@@ -1,44 +1,70 @@
-import pandas as pd
+from dash import Dash, dcc, html, Input, Output, callback
 import plotly.express as px
-import numpy as np
+import pandas as pd
 
-
+# Load NBA Data
 season_data = {}
-
-# Load the data for each season from 2015 to 2024
-# Under season_data, the data for each season is stored in a dictionary
-# with the year as the key and the DataFrame as the value
 def loadData():
-    # Load the data for each season from 2015 to 2024
     for year in range(2015, 2025):
         filename = f'NBA Reg Season {year}.txt'
         df = pd.read_csv(filename)
-        
-        # Remove 'Player-additional' column if it exists
+
         if 'Player-additional' in df.columns:
             df = df.drop(columns=['Player-additional'])
-        
-        # Keep only players with more than 58 games played
-        if 'G' in df.columns:
-            df = df[df['G'] > 58]
+
+        if 'PTS' in df.columns and 'FGA' in df.columns and 'FTA' in df.columns:
+            df['TS%'] = df['PTS'] / (2 * (df['FGA'] + 0.44 * df['FTA']))
 
         season_data[year] = df
 
-
-# Main
 loadData()
-print(season_data[2024].head())  # Now this will show column names and values
+df_2024 = season_data[2024]
 
-# Sort by points
-sorted_df = season_data[2024].sort_values(by='PTS', ascending=True)
 
-# Plot Points Per Game in the 2024-2025 season
-fig = px.scatter(
-    sorted_df,
-    y='PTS',
-    x='Player',
-    title='Points Per Game in the 2024-2025 Season (Sorted)'
-)
+# App setup
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+app = Dash(__name__, external_stylesheets=external_stylesheets)
 
-fig.update_layout(xaxis_title='Player', yaxis_title='Points Per Game')
-fig.show()
+app.layout = html.Div([
+    html.H4('NBA 2024-2025: Points vs True Shooting Percentage'),
+    
+    dcc.RangeSlider(
+        id='games-slider',
+        min=int(df_2024['G'].min()),
+        max=int(df_2024['G'].max()),
+        step=1,
+        value=[58, int(df_2024['G'].max())],
+        marks={
+            int(df_2024['G'].min()): str(int(df_2024['G'].min())),
+            int(df_2024['G'].max()): str(int(df_2024['G'].max()))
+        }
+    ),
+    
+    html.Div(id='output-container-range-slider', style={'marginTop': 10, 'fontWeight': 'bold'}),
+    
+    dcc.Graph(id="scatter-plot")
+])
+
+@callback(
+    Output('scatter-plot', 'figure'),
+    Output('output-container-range-slider', 'children'),
+    Input('games-slider', 'value'))
+def update_output(games_range):
+    low, high = games_range
+    mask = (df_2024['G'] >= low) & (df_2024['G'] <= high)
+    filtered_df = df_2024[mask]
+
+    fig = px.scatter(
+        filtered_df,
+        x="PTS",
+        y="TS%",
+        hover_name="Player",
+        trendline="ols",
+        title='Points vs True Shooting % (Filtered by Games Played)'
+    )
+    fig.update_layout(xaxis_title='Points', yaxis_title='True Shooting Percentage')
+
+    return fig, f'You have selected games played between **{low} and {high}** — {len(filtered_df)} players match.'
+
+if __name__ == '__main__':
+    app.run(debug=True)
