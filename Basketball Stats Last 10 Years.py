@@ -1,31 +1,44 @@
 import pandas as pd
 import plotly.express as px
+import numpy as np
+
 
 season_data = {}
 
-for year in range(2015, 2025):
-    filename = f'NBA Reg Season {year}.txt'
-    df = pd.read_csv(filename)
-    
-    # Remove 'Player-additional' column if it exists
-    if 'Player-additional' in df.columns:
-        df = df.drop(columns=['Player-additional'])
-    
-    season_data[year] = df
+# Load the data for each season from 2015 to 2024
+# Under season_data, the data for each season is stored in a dictionary
+# with the year as the key and the DataFrame as the value
+def loadData():
+    # Load the data for each season from 2015 to 2024
+    for year in range(2015, 2025):
+        filename = f'NBA Reg Season {year}.txt'
+        df = pd.read_csv(filename)
+        
+        # Remove 'Player-additional' column if it exists
+        if 'Player-additional' in df.columns:
+            df = df.drop(columns=['Player-additional'])
+        
+        # Keep only players with more than 58 games played
+        if 'G' in df.columns:
+            df = df[df['G'] > 58]
 
-# Test: show the columns of one season
-print(season_data[2024].head)
-all_seasons = pd.concat(season_data.values(), ignore_index=True)
+        season_data[year] = df
 
 
-avg_points_by_age = all_seasons.groupby('Age')['PTS'].mean().reset_index()
+# Main
+loadData()
+print(season_data[2024].head())  # Now this will show column names and values
 
-fig = px.line(
-    avg_points_by_age,
-    x='Age',
+# Sort by points
+sorted_df = season_data[2024].sort_values(by='PTS', ascending=True)
+
+# Plot Points Per Game in the 2024-2025 season
+fig = px.scatter(
+    sorted_df,
     y='PTS',
-    markers=True,
-    title='Average Points by Age',
-    labels={'PTS': 'Average Points', 'Age': 'Player Age'}
+    x='Player',
+    title='Points Per Game in the 2024-2025 Season (Sorted)'
 )
+
+fig.update_layout(xaxis_title='Player', yaxis_title='Points Per Game')
 fig.show()
