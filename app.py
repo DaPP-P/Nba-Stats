@@ -1,6 +1,7 @@
 from dash import Dash, dcc, html, Input, Output, callback
 import plotly.express as px
 import pandas as pd
+import os
 
 # Load NBA Data
 season_data = {}
@@ -100,4 +101,4 @@ def update_chart(games_range, label_toggle):
     return fig, f'You have selected games played between **{low} and {high}** — {len(filtered_df)} players match.'
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8050)))
