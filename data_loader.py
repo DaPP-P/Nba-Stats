@@ -24,6 +24,6 @@ def get_seasonal_averages(season_data):
     rows = []
     for year, df in season_data.items():
         if 'FT%' in df.columns:
-            avg_ft = df['FT%'].mean()
+            avg_ft = df['FT'].sum() / df["FTA"].sum()
             rows.append({'Season': year, 'Average FT%': avg_ft})
     return pd.DataFrame(rows)

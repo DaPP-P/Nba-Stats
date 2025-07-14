@@ -21,8 +21,8 @@ df_2024 = season_data[2024]
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 
-app.layout = ft_percentage_by_year.get_layout(df_all_years)
-ft_percentage_by_year.register_callbacks(app, df_all_years)
+app.layout = ft_percentage_by_year.get_layout(df_all_years, season_averages)
+ft_percentage_by_year.register_callbacks(app, df_all_years, season_averages)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8050)))

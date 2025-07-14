@@ -1,7 +1,7 @@
 from dash import dcc, html, Input, Output
 import plotly.express as px
 
-def get_layout(df):
+def get_layout(df, season_averages):
     return html.Div([
         html.H4('NBA free throw percentage by year 2015 to 2025'),
         
@@ -28,7 +28,7 @@ def get_layout(df):
         dcc.Graph(id="scatter-plot")
     ])
 
-def register_callbacks(app, df):
+def register_callbacks(app, df, season_averages):
     @app.callback(
         Output('scatter-plot', 'figure'),
         Output('output-container-range-slider', 'children'),
@@ -55,9 +55,18 @@ def register_callbacks(app, df):
         if show_labels:
             fig.update_traces(textposition='top center')
 
+        fig.add_traces(
+            px.line(
+                season_averages,
+                x=season_averages['Season'].astype(str),
+                y='Average FT%',
+                markers=True,
+            ).data
+        )
+
         fig.update_layout(
             xaxis_title='Year', 
             yaxis_title='Free Throw Percentage',
-            xassis_type='category'
+            xaxis_type='category',
         )
         return fig, f'You have selected games played between **{low} and {high}** — {len(filtered_df)} players match.'
