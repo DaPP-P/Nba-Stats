@@ -2,11 +2,14 @@ from dash import Dash
 import os
 import pandas as pd
 from data_loader import load_season_data, get_seasonal_averages
-from graphs import points_vs_ts, ft_percentage_by_year  
+from graphs import points_vs_ts, ft_percentage_by_year , percentages_by_year, shot_types_per_year
 
 # Season data loading
 season_data = load_season_data()
 season_averages = get_seasonal_averages(season_data)
+
+# The graph I want to be running
+loaded_graph = shot_types_per_year
 
 print(season_averages)
 
@@ -21,8 +24,9 @@ df_2024 = season_data[2024]
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 
-app.layout = ft_percentage_by_year.get_layout(df_all_years, season_averages)
-ft_percentage_by_year.register_callbacks(app, df_all_years, season_averages)
+app.layout = loaded_graph.get_layout(df_all_years, season_averages)
+if hasattr(loaded_graph, 'register_callbacks'):
+    loaded_graph.register_callbacks(app, df_all_years, season_averages)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8050)))
